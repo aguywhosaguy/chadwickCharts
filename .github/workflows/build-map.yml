@@ -1,0 +1,48 @@
+name: Build data
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Clone the Chadwick register
+        run: git clone --depth 1 https://github.com/chadwickbureau/register.git register
+
+      - name: Get upstream commit
+        id: upstream
+        run: echo "sha=$(git -C register rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Get previously published commit
+        id: previous
+        run: |
+          mkdir -p prev
+          gh release download latest -p data.json -D prev || true
+          if [ -f prev/data.json ]; then
+            echo "sha=$(jq -r .upstreamCommit prev/data.json)" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build data.json
+        if: steps.upstream.outputs.sha != steps.previous.outputs.sha
+        run: uv run main.py
+
+      - name: Publish release asset
+        if: steps.upstream.outputs.sha != steps.previous.outputs.sha
+        run: |
+          gh release view latest || gh release create latest \
+            --title "Latest data" --notes "Automatically generated. See data.json."
+          gh release upload latest data.json --clobber
