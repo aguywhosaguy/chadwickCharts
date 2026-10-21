@@ -37,11 +37,11 @@ jobs:
           fi
 
       - name: Build data.json
-        if: steps.upstream.outputs.sha != steps.previous.outputs.sha
+        if: steps.upstream.outputs.sha != steps.previous.outputs.sha || github.event_name == 'workflow_dispatch'
         run: uv run main.py
 
       - name: Publish release asset
-        if: steps.upstream.outputs.sha != steps.previous.outputs.sha
+        if: steps.upstream.outputs.sha != steps.previous.outputs.sha || github.event_name == 'workflow_dispatch'
         run: |
           gh release view latest || gh release create latest \
             --title "Latest data" --notes "Automatically generated. See data.json."

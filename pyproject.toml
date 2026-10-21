@@ -1,7 +1,7 @@
 [project]
 name = "chadwickcharts"
-version = "0.3.0"
-description = "Chadwick Baseball Bureau Register scraper for FanGraphs and BRef IDs"
+version = "0.3.1"
+description = "Chadwick Baseball Bureau Register scraper for Baseball Plus IDs"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
